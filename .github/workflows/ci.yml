@@ -36,7 +36,6 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - linter
-      - molecule
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
