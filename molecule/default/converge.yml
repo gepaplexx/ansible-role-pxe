@@ -36,11 +36,14 @@
       include_role:
         name: 'gepaplexx.pxe'
       vars:
-        openshift_mirror_url: https://docs.google.com/
-        linuxefi: uc?export=download&id=1UuTeNa8rZPorwOB-pC67BH7rSIQhGDf-
-        initrdefi: uc?export=download&id=1UfeFs-feOdsyIH8_n8TwrdHUNnJvhyeB
-        coreos_root_fs: uc?export=download&id=1PU2feURmuJgnx4mi4O6kYvhXUBpU4Heh
-        coreos_image: uc?export=download&id=1w9vheEg1IjD2NP779WtsrjiiOk1TPxpf
+        nginx_pxe_directory: /var/www/pxe
+        tftp_pxe_directory: /srv/tftp/pxelinux
+
+        openshift_mirror_url: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.6/latest
+        coreos_root_fs: rhcos-live-rootfs.x86_64.img
+        coreos_image: rhcos-metal.x86_64.raw.gz
+        linuxefi: rhcos-live-kernel-x86_64
+        initrdefi: rhcos-live-initramfs.x86_64.img
 
         mac_prefix: '00:11:22:33:44'
         bootstrap:
@@ -55,6 +58,6 @@
           - "{{ mac_prefix }}:05"
 
         nginx_host_port: 10.20.26.12:8080
-        rhel_download_url: https://docs.google.com/uc?export=download&id=1V2arjbla8oz8A9hdxv0EOqtcelHhxkZ4
-        rhel_download_checksum: ""
+        rhel_download_url: https://access.cdn.redhat.com/content/origin/files/sha256/30/30fd8dff2d29a384bd97886fa826fa5be872213c81e853eae3f9d9674f720ad0/rhel-8.3-x86_64-dvd.iso?user=815c25403a3dedabc3c723ad0a063fc3&_auth_=1615986269_17d672a27e184c360962290f5e9407dd
+        rhel_download_checksum: "sha256:30fd8dff2d29a384bd97886fa826fa5be872213c81e853eae3f9d9674f720ad0"
 ...
