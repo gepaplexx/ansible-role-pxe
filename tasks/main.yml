@@ -25,7 +25,6 @@
   tags:
     - pxe
     - nginx
-    - working
 
 - name: Configure TFTP-Server for PXE boot
   include_tasks: configure_tftp.yml
@@ -34,6 +33,5 @@
   include_tasks: configure_nginx.yml
   tags:
     - nginx
-    - working
 
 ...

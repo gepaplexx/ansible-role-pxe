@@ -13,7 +13,7 @@
     mode: '0644'
   tags: nginx
 
-- name: Download image into nginx dir
+- name: Download coreos image into nginx dir
   get_url:
     url: "{{ openshift_mirror_url }}/{{ coreos_image }}"
     dest: "{{ nginx_pxe_directory }}"

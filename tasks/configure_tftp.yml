@@ -40,6 +40,7 @@
       - BaseOS/Packages/grub2-efi-x64-2.02-90.el8.x86_64.rpm
       - isolinux/ldlinux.c32
       - isolinux/libutil.c32
+      - EFI/BOOT/grub.cfg
 
 - name: extract rpm files
   shell: "set -o pipefail && rpm2cpio {{ item }} | cpio -dimv"
@@ -68,6 +69,9 @@
     - tftpboot/libmenu.c32
     - boot/efi/EFI/BOOT/BOOTX64.EFI
     - boot/efi/EFI/redhat/grubx64.efi
+    - isolinux/ldlinux.c32
+    - isolinux/libutil.c32
+    - EFI/BOOT/grub.cfg
   tags:
     - tftp
 
