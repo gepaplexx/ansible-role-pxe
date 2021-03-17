@@ -170,7 +170,7 @@
 - name: Generate default pxelinux.cfg
   template:
     src: "pxelinux.cfg.j2"
-    dest: "{{ tftp_pxe_directory }}/default"
+    dest: "{{ tftp_pxe_directory }}/pxelinux.cfg/default"
     owner: root
     group: "root"
     mode: 0644
