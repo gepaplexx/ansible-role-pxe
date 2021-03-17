@@ -69,9 +69,9 @@
     - tftpboot/libmenu.c32
     - boot/efi/EFI/BOOT/BOOTX64.EFI
     - boot/efi/EFI/redhat/grubx64.efi
-    - isolinux/ldlinux.c32
-    - isolinux/libutil.c32
-    - EFI/BOOT/grub.cfg
+    - ldlinux.c32
+    - libutil.c32
+    - grub.cfg
   tags:
     - tftp
 
