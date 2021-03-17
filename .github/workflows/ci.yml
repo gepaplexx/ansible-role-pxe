@@ -59,7 +59,7 @@ jobs:
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_ICON: https://github.com/ckaserer/logos/raw/master/ansible.png
-          SLACK_USERNAME: ${{ github.repository " }}
+          SLACK_USERNAME: ${{ github.repository }}
           SLACK_COLOR: '#ff0033'
           SLACK_FOOTER: ''
 ...
