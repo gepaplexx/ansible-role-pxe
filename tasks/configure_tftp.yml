@@ -1,0 +1,201 @@
+---
+- name: Ensure tftp directory for pxe exists
+  file:
+    path: "{{ tftp_pxe_directory }}"
+    state: directory
+    owner: "{{ tftp_user }}"
+    group: "{{ tftp_group }}"
+    mode: "{{ tftp_mode }}"
+  tags:
+    - tftp
+    - working
+
+- name: Ensure pxelinux.cfg directory exists
+  file:
+    path: "{{ tftp_pxe_directory }}/pxelinux.cfg"
+    state: directory
+    owner: "{{ tftp_user }}"
+    group: "{{ tftp_group }}"
+    mode: "{{ tftp_mode }}"
+  tags:
+    - tftp
+    - working
+
+- name: Download RHEL
+  get_url:
+    url: "{{ rhel_download_url }}"
+    dest: /tmp/rhel.iso
+    mode: '0644'
+    checksum: "{{ rhel_download_checksum }}"
+  tags:
+    - tftp
+    - working
+
+- name: Extract files for pxe boot
+  iso_extract:
+    image: /tmp/rhel.iso
+    dest: /tmp
+    files:
+      # - EFI/BOOT/BOOTIA32.EFI
+      # - EFI/BOOT/BOOTX64.EFI
+      # - EFI/BOOT/grubx64.efi
+      - images/pxeboot/vmlinuz
+      - images/pxeboot/initrd.img
+      - BaseOS/Packages/syslinux-tftpboot-6.04-4.el8.noarch.rpm
+      # - BaseOS/Packages/shim-ia32-15-16.el8.x86_64.rpm
+      - BaseOS/Packages/shim-x64-15-16.el8.x86_64.rpm
+      # - BaseOS/Packages/grub2-efi-ia32-2.02-90.el8.x86_64.rpm
+      - BaseOS/Packages/grub2-efi-x64-2.02-90.el8.x86_64.rpm
+
+- name: extract rpm files
+  shell: "set -o pipefail && rpm2cpio {{ item }} | cpio -dimv"
+  args:
+    chdir: /tmp
+    executable: /bin/bash
+  changed_when: false
+  with_items:
+    - syslinux-tftpboot-6.04-4.el8.noarch.rpm
+    # - shim-ia32-15-16.el8.x86_64.rpm
+    - shim-x64-15-16.el8.x86_64.rpm
+    # - grub2-efi-ia32-2.02-90.el8.x86_64.rpm
+    - grub2-efi-x64-2.02-90.el8.x86_64.rpm
+
+- name: Copy files to tftp root dir
+  copy:
+    src: "/tmp/{{ item }}"
+    dest: "{{ tftp_pxe_directory }}"
+    owner: "{{ tftp_user }}"
+    group: "{{ tftp_group }}"
+    mode: '644'
+    remote_src: true
+  with_items:
+    # - BOOTIA32.EFI
+    # - BOOTX64.EFI
+    # - grubx64.efi
+    - vmlinuz
+    - initrd.img
+    - tftpboot/pxelinux.0
+    - boot/efi/EFI/BOOT/BOOTX64.EFI
+    - boot/efi/EFI/redhat/grubx64.efi
+  tags:
+    - tftp
+    - working
+
+- name: Ensure service is started
+  service:
+    name: "{{ tftp_service }}"
+    state: started
+    enabled: true
+  tags:
+    - tftp
+    - working
+
+- name: Generate grub.cfg for master
+  template:
+    src: "grub.cfg.j2"
+    dest: "{{ tftp_pxe_directory }}/grub.cfg-01-{{ item | replace(':', '-') }}"
+    owner: root
+    group: "root"
+    mode: 0644
+  with_items:
+    - "{{ master }}"
+  vars:
+    fallback: master
+  tags:
+    - tftp
+    - working
+
+- name: Generate grub.cfg for worker
+  template:
+    src: "grub.cfg.j2"
+    dest: "{{ tftp_pxe_directory }}/grub.cfg-01-{{ item | replace(':', '-') }}"
+    owner: root
+    group: "root"
+    mode: 0644
+  with_items:
+    - "{{ worker }}"
+  vars:
+    fallback: worker
+  tags:
+    - tftp
+    - working
+
+- name: Generate grub.cfg for bootstrap
+  template:
+    src: "grub.cfg.j2"
+    dest: "{{ tftp_pxe_directory }}/grub.cfg-01-{{ item | replace(':', '-') }}"
+    owner: root
+    group: "root"
+    mode: 0644
+  with_items:
+    - "{{ bootstrap }}"
+  vars:
+    fallback: bootstrap
+  tags:
+    - tftp
+    - working
+
+- name: Generate pxelinux.cfg for bootstrap
+  template:
+    src: "pxelinux.cfg.j2"
+    dest: "{{ tftp_pxe_directory }}/pxelinux.cfg/01-{{ item | replace(':', '-') }}"
+    owner: root
+    group: "root"
+    mode: 0644
+  with_items:
+    - "{{ bootstrap }}"
+  vars:
+    default: bootstrap
+  tags:
+    - tftp
+    - working
+
+- name: Generate pxelinux.cfg for master
+  template:
+    src: "pxelinux.cfg.j2"
+    dest: "{{ tftp_pxe_directory }}/pxelinux.cfg/01-{{ item | replace(':', '-') }}"
+    owner: root
+    group: "root"
+    mode: 0644
+  with_items:
+    - "{{ master }}"
+  vars:
+    default: master
+  tags:
+    - tftp
+    - working
+
+- name: Generate pxelinux.cfg for worker
+  template:
+    src: "pxelinux.cfg.j2"
+    dest: "{{ tftp_pxe_directory }}/pxelinux.cfg/01-{{ item | replace(':', '-') }}"
+    owner: root
+    group: "root"
+    mode: 0644
+  with_items:
+    - "{{ worker }}"
+  vars:
+    default: worker
+  tags:
+    - tftp
+    - working
+
+- name: Download Kernel
+  get_url:
+    url: "{{ openshift_mirror_url }}/{{ linuxefi }}"
+    dest: "{{ tftp_pxe_directory }}"
+    mode: '0644'
+  tags:
+    - tftp
+    - working
+
+- name: Download Initramfs
+  get_url:
+    url: "{{ openshift_mirror_url }}/{{ initrdefi }}"
+    dest: "{{ tftp_pxe_directory }}"
+    mode: '0644'
+  tags:
+    - tftp
+    - working
+
+...

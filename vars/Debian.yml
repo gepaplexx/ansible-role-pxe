@@ -1,0 +1,6 @@
+---
+
+tftp_service: tftpd-hpa
+tftp_config: /etc/default/tftpd-hpa
+
+...

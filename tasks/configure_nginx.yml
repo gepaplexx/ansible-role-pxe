@@ -1,0 +1,23 @@
+---
+
+- name: Ensure nginx directory for pxe exists
+  file:
+    path: "{{ nginx_pxe_directory }}"
+    state: directory
+  tags: nginx
+
+- name: Download rootfs into nginx dir
+  get_url:
+    url: "{{ openshift_mirror_url }}/{{ coreos_root_fs }}"
+    dest: "{{ nginx_pxe_directory }}"
+    mode: '0644'
+  tags: nginx
+
+- name: Download image into nginx dir
+  get_url:
+    url: "{{ openshift_mirror_url }}/{{ coreos_image }}"
+    dest: "{{ nginx_pxe_directory }}"
+    mode: '0644'
+  tags: nginx
+
+...

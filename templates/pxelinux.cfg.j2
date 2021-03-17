@@ -1,0 +1,29 @@
+DEFAULT {% if default in ['worker', 'master', 'bootstrap'] %}
+"{{default}}"
+{% else %}
+"worker"
+{% endif %}
+PROMPT 0
+TIMEOUT 50
+
+MENU title ########## PXE Boot Menu ##########
+
+LABEL bootstrap
+MENU LABEL ^2) Bootstrap
+KERNEL {{ linuxefi }}
+APPEND initrd={{ initrdefi }} coreos.live.rootfs_url=http://{{ nginx_host_port }}/{{ coreos_root_fs }} coreos.inst.install_dev=/dev/sda coreos.inst.ignition_url=http://{{ nginx_host_port }}/{{ bootstrap_ign }}
+
+LABEL master
+MENU LABEL ^3) Master
+KERNEL {{ linuxefi }}
+APPEND initrd={{ initrdefi }} coreos.live.rootfs_url=http://{{ nginx_host_port }}/{{ coreos_root_fs }} coreos.inst.install_dev=/dev/sda coreos.inst.ignition_url=http://{{ nginx_host_port }}/{{ master_ign }}
+
+LABEL worker
+MENU LABEL ^4) Worker
+KERNEL {{ linuxefi }}
+APPEND initrd={{ initrdefi }} coreos.live.rootfs_url=http://{{ nginx_host_port }}/{{ coreos_root_fs }} coreos.inst.install_dev=/dev/sda coreos.inst.ignition_url=http://{{ nginx_host_port }}/{{ worker_ign }}
+
+LABEL 5
+MENU DEFAULT
+MENU LABEL ^5) Boot from local drive
+LOCALBOOT

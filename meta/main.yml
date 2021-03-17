@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  author: "gepaplexx"
+  role_name: "pxe"
+  description: "Ansible role to do ..."
+  company: "gepaplexx"
+  license: "MIT"
+  min_ansible_version: "2.10"
+  platforms:
+    - name: Debian
+      versions:
+        - buster
+    - name: Ubuntu
+      versions:
+        - focal
+  galaxy_tags: []
+
+dependencies: []
+...

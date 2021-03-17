@@ -1,0 +1,39 @@
+---
+
+- name: Include distribution specific variables
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution }}.yml"
+    - "{{ ansible_os_family }}.yml"
+  tags:
+    - pxe
+    - nginx
+
+- name: Update cache
+  apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Apt install packages
+  apt:
+    name:
+      - p7zip-full
+      - rpm2cpio
+      - cpio
+    state: present
+    update_cache: true
+  tags:
+    - pxe
+    - nginx
+    - working
+
+- name: Configure TFTP-Server for PXE boot
+  include_tasks: configure_tftp.yml
+
+- name: Configure NGINX-Server for PXE boot
+  include_tasks: configure_nginx.yml
+  tags:
+    - nginx
+    - working
+
+...

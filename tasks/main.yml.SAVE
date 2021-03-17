@@ -1,0 +1,30 @@
+---
+
+- name: Download oc client
+  get_url:
+    url: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.6/latest/rhcos-4.6.8-x86_64-live.x86_64.iso
+    dest: /tmp/rhcos-4.6.8-x86_64-live.x86_64.iso
+    mode: '0777'
+
+- name: Extract kernel and ramdisk from a LiveCD
+  iso_extract:
+    image: /tmp/rhcos-4.6.8-x86_64-live.x86_64.iso
+    dest: /tmp/
+    files:
+      - images/efiboot.img
+      - images/pxeboot/initrd.img
+      - images/pxeboot/rootfs.img
+
+- name: Generate grub.cfg for master
+  template:
+    src: "grub.cfg.j2"
+    dest: "/grub.cfg-{{ item }}"
+    owner: root
+    group: "root"
+    mode: 0644
+  with_items:
+    - "{{ master }}"
+  vars:
+    - fallback: Bootstrap (EFI)
+
+...
