@@ -1,7 +1,7 @@
 ---
 - name: Ensure tftp directory for pxe exists
   file:
-    path: "{{ tftp_pxe_directory }}"
+    path: "{{ tftp_root_directory }}"
     state: directory
     owner: "{{ tftp_user }}"
     group: "{{ tftp_group }}"
@@ -11,7 +11,7 @@
 
 - name: Ensure pxelinux.cfg directory exists
   file:
-    path: "{{ tftp_pxe_directory }}/pxelinux.cfg"
+    path: "{{ tftp_root_directory }}/pxelinux.cfg"
     state: directory
     owner: "{{ tftp_user }}"
     group: "{{ tftp_group }}"
@@ -58,7 +58,7 @@
 - name: Copy files to tftp root dir
   copy:
     src: "/tmp/{{ item }}"
-    dest: "{{ tftp_pxe_directory }}"
+    dest: "{{ tftp_root_directory }}"
     owner: "{{ tftp_user }}"
     group: "{{ tftp_group }}"
     mode: '644'
@@ -86,7 +86,7 @@
 - name: Generate grub.cfg for master
   template:
     src: "grub.cfg.j2"
-    dest: "{{ tftp_pxe_directory }}/grub.cfg-01-{{ item | replace(':', '-') }}"
+    dest: "{{ tftp_root_directory }}/grub.cfg-01-{{ item | replace(':', '-') }}"
     owner: root
     group: "root"
     mode: 0644
@@ -100,7 +100,7 @@
 - name: Generate grub.cfg for worker
   template:
     src: "grub.cfg.j2"
-    dest: "{{ tftp_pxe_directory }}/grub.cfg-01-{{ item | replace(':', '-') }}"
+    dest: "{{ tftp_root_directory }}/grub.cfg-01-{{ item | replace(':', '-') }}"
     owner: root
     group: "root"
     mode: 0644
@@ -114,7 +114,7 @@
 - name: Generate grub.cfg for bootstrap
   template:
     src: "grub.cfg.j2"
-    dest: "{{ tftp_pxe_directory }}/grub.cfg-01-{{ item | replace(':', '-') }}"
+    dest: "{{ tftp_root_directory }}/grub.cfg-01-{{ item | replace(':', '-') }}"
     owner: root
     group: "root"
     mode: 0644
@@ -128,7 +128,7 @@
 - name: Generate pxelinux.cfg for bootstrap
   template:
     src: "pxelinux.cfg.j2"
-    dest: "{{ tftp_pxe_directory }}/pxelinux.cfg/01-{{ item | replace(':', '-') }}"
+    dest: "{{ tftp_root_directory }}/pxelinux.cfg/01-{{ item | replace(':', '-') }}"
     owner: root
     group: "root"
     mode: 0644
@@ -142,7 +142,7 @@
 - name: Generate pxelinux.cfg for master
   template:
     src: "pxelinux.cfg.j2"
-    dest: "{{ tftp_pxe_directory }}/pxelinux.cfg/01-{{ item | replace(':', '-') }}"
+    dest: "{{ tftp_root_directory }}/pxelinux.cfg/01-{{ item | replace(':', '-') }}"
     owner: root
     group: "root"
     mode: 0644
@@ -156,7 +156,7 @@
 - name: Generate pxelinux.cfg for worker
   template:
     src: "pxelinux.cfg.j2"
-    dest: "{{ tftp_pxe_directory }}/pxelinux.cfg/01-{{ item | replace(':', '-') }}"
+    dest: "{{ tftp_root_directory }}/pxelinux.cfg/01-{{ item | replace(':', '-') }}"
     owner: root
     group: "root"
     mode: 0644
@@ -170,7 +170,7 @@
 - name: Generate default pxelinux.cfg
   template:
     src: "pxelinux.cfg.j2"
-    dest: "{{ tftp_pxe_directory }}/pxelinux.cfg/default"
+    dest: "{{ tftp_root_directory }}/pxelinux.cfg/default"
     owner: root
     group: "root"
     mode: 0644
@@ -182,7 +182,7 @@
 - name: Download Kernel
   get_url:
     url: "{{ openshift_mirror_url }}/{{ linuxefi }}"
-    dest: "{{ tftp_pxe_directory }}"
+    dest: "{{ tftp_root_directory }}"
     mode: '0644'
   tags:
     - tftp
@@ -190,7 +190,7 @@
 - name: Download Initramfs
   get_url:
     url: "{{ openshift_mirror_url }}/{{ initrdefi }}"
-    dest: "{{ tftp_pxe_directory }}"
+    dest: "{{ tftp_root_directory }}"
     mode: '0644'
   tags:
     - tftp

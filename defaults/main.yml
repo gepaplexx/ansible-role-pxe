@@ -22,7 +22,7 @@ master_ign: master.ign
 worker_ign: worker.ign
 
 # tftp configuration
-tftp_pxe_directory: /srv/tftp/pxelinux
+tftp_root_directory: /srv/tftp/pxelinux
 tftp_user: "root"
 tftp_group: "root"
 tftp_mode: "0755"
