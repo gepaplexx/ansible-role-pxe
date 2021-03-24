@@ -13,6 +13,7 @@ openshift_mirror_url: https://mirror.openshift.com/pub/openshift-v4/dependencies
 # grub.cfg
 # nginx_host_port: 10.20.26.12:8080
 
+coreos_iso: rhcos-live.x86_64.iso
 coreos_root_fs: rhcos-live-rootfs.x86_64.img
 coreos_image: rhcos-metal.x86_64.raw.gz
 linuxefi: rhcos-live-kernel-x86_64

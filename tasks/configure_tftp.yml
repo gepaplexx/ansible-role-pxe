@@ -28,21 +28,38 @@
   tags:
     - tftp
 
-- name: Copy BOOTX64.efi to tftp root dir
-  copy:
-    src: "/usr/lib/shim/shimx64.efi.signed"
-    dest: "{{ tftp_root_directory }}/BOOTX64.EFI"
-    remote_src: true
-    mode: 0555
+- name: Download RHCOS Iso
+  get_url:
+    url: "{{ openshift_mirror_url }}/{{ coreos_iso }}"
+    dest: "/tmp/rhcos.iso"
+    mode: 0644
   tags:
     - tftp
 
-- name: Copy grubx64.efi to tftp root dir
+- name: Extract efiboot.img
+  iso_extract:
+    image: /tmp/rhcos.iso
+    dest: /tmp
+    files:
+      - images/efiboot.img
+
+- name: Mount efiboot.img
+  shell: "mount efiboot.img /media"
+  args:
+    chdir: /tmp
+    executable: /bin/bash
+  changed_when: false
+  ignore_errors: True
+
+- name: Copy BOOTX64.efi and grubx64.efi to tftp root dir
   copy:
-    src: "/usr/lib/grub/x86_64-efi-signed/grubnetx64.efi.signed"
-    dest: "{{ tftp_root_directory }}/grubx64.efi"
+    src: "/media/{{ item }}"
+    dest: "{{ tftp_root_directory }}"
     remote_src: true
     mode: 0555
+  with_items:
+    - EFI/redhat/grubx64.efi
+    - EFI/BOOT/BOOTX64.EFI
   tags:
     - tftp
 
