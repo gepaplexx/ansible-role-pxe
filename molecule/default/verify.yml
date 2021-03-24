@@ -18,7 +18,7 @@
 
     - name: Get stats of BOOTX64.efi
       stat:
-        path: "{{ tftp_root_directory }}/BOOTX64.efi"
+        path: "{{ tftp_root_directory }}/BOOTX64.EFI"
       register: stat_bootx64
 
     - name: Check if BOOTX64.efi was copied and in right mode
