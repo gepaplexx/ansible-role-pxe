@@ -1,14 +1,9 @@
-default="Local Disk"
-fallback={% if fallback in ['worker', 'master', 'bootstrap'] %}
+default={% if fallback in ['worker', 'master', 'bootstrap'] %}
 "{{fallback}}"
 {% else %}
 "worker"
 {% endif %}
 timeout=10
-
-menuentry "Local Disk" {
-set root=(hd0,1)
-}
 
 menuentry "bootstrap" {
   linuxefi {{ linuxefi }} coreos.inst=yes coreos.inst.insecure coreos.inst.install_dev=sda coreos.live.rootfs_url=http://{{ nginx_host_port }}/{{ coreos_root_fs }} coreos.inst.image_url=http://{{ nginx_host_port }}/{{ coreos_image }} coreos.inst.ignition_url=http://{{ nginx_host_port }}/{{ bootstrap_ign }}
