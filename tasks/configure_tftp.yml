@@ -31,7 +31,7 @@
 - name: Copy BOOTX64.efi to tftp root dir
   copy:
     src: "/usr/lib/shim/shimx64.efi.signed"
-    dest: "{{ tftp_root_directory }}/BOOTX64.efi"
+    dest: "{{ tftp_root_directory }}/BOOTX64.EFI"
     remote_src: true
     mode: 0555
   tags:
