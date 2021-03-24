@@ -3,17 +3,14 @@ bootstrap: []
 master: []
 worker: []
 
-# RHEL URL: expires after 30min
-# rhel_download_url: https://access.cdn.redhat.com/content/origin/files/sha256/30/30fd8dff2d29a384bd97886fa826fa5be872213c81e853eae3f9d9674f720ad0/rhel-8.3-x86_64-dvd.iso?user=815c25403a3dedabc3c723ad0a063fc3&_auth_=1615899501_343f4ec7211132968a88f0181771f4ab
-# rhel_download_checksum: sha256:30fd8dff2d29a384bd97886fa826fa5be872213c81e853eae3f9d9674f720ad0
-
 # download images, etc.
-openshift_mirror_url: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.6/latest
+openshift_mirror_url: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.7/latest
 
 # grub.cfg
 # nginx_host_port: 10.20.26.12:8080
 
 coreos_iso: rhcos-live.x86_64.iso
+coreos_iso_checksum: sha256:b765a9e99edfa0a91778a4787070c6afcaa198ba8806c8c1533c34a23d63136f
 coreos_root_fs: rhcos-live-rootfs.x86_64.img
 coreos_image: rhcos-metal.x86_64.raw.gz
 linuxefi: rhcos-live-kernel-x86_64

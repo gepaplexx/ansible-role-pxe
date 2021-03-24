@@ -39,7 +39,7 @@
         nginx_pxe_directory: /var/www/pxe
         tftp_root_directory: /srv/tftp/pxelinux
 
-        openshift_mirror_url: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.6/latest
+        # openshift_mirror_url: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.6/latest
         coreos_root_fs: rhcos-live-rootfs.x86_64.img
         coreos_image: rhcos-metal.x86_64.raw.gz
         linuxefi: rhcos-live-kernel-x86_64
@@ -58,6 +58,4 @@
           - "{{ mac_prefix }}:05"
 
         nginx_host_port: 10.20.26.12:8080
-        rhel_download_url: https://access.cdn.redhat.com/content/origin/files/sha256/30/30fd8dff2d29a384bd97886fa826fa5be872213c81e853eae3f9d9674f720ad0/rhel-8.3-x86_64-dvd.iso?user=815c25403a3dedabc3c723ad0a063fc3&_auth_=1615986269_17d672a27e184c360962290f5e9407dd
-        rhel_download_checksum: "sha256:30fd8dff2d29a384bd97886fa826fa5be872213c81e853eae3f9d9674f720ad0"
 ...

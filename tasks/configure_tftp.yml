@@ -33,6 +33,7 @@
     url: "{{ openshift_mirror_url }}/{{ coreos_iso }}"
     dest: "/tmp/rhcos.iso"
     mode: 0644
+    checksum: "{{ coreos_iso_checksum }}"
   tags:
     - tftp
 
@@ -62,6 +63,13 @@
     - EFI/BOOT/BOOTX64.EFI
   tags:
     - tftp
+
+- name: Unmount efiboot.img
+  shell: "umount /media"
+  args:
+    executable: /bin/bash
+  changed_when: false
+  ignore_errors: True
 
 - name: Copy ldlinux.c32 to tftp root dir
   copy:
