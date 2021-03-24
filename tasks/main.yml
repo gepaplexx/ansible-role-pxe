@@ -13,6 +13,9 @@
   apt:
     update_cache: true
     cache_valid_time: 3600
+  tags:
+    - pxe
+    - nginx
 
 - name: Apt install packages
   apt:
@@ -20,6 +23,10 @@
       - p7zip-full
       - rpm2cpio
       - cpio
+      - syslinux-common
+      - pxelinux
+      - grub-efi-amd64-signed
+      - shim-signed
     state: present
     update_cache: true
   tags:

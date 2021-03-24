@@ -1,11 +1,136 @@
 ---
 - name: Verify
   hosts: all
-  gather_facts: false
+  vars:
+    tftp_root_directory: /srv/tftp/pxelinux
+    nginx_root_directory: /var/www/pxe
   tasks:
 
-    - name: Example assertion
-      assert:
-        that: true
+    - name: Get stats of pxelinux.0
+      stat:
+        path: "{{ tftp_root_directory }}/pxelinux.0"
+      register: stat_pxelinux
 
+    - name: Check if pxelinux.0 was copied and in right mode
+      fail:
+        msg: "pxelinux.0 was not copied or in wrong mode"
+      when: stat_pxelinux.stat.exists == False or stat_pxelinux.stat.mode != '0644'
+
+    - name: Get stats of BOOTX64.efi
+      stat:
+        path: "{{ tftp_root_directory }}/BOOTX64.efi"
+      register: stat_bootx64
+
+    - name: Check if BOOTX64.efi was copied and in right mode
+      fail:
+        msg: "stat_bootx64.efi was not copied or in wrong mode"
+      when: stat_bootx64.stat.exists == False or stat_bootx64.stat.mode != '0555'
+
+    - name: Get stats of grubx64.efi
+      stat:
+        path: "{{ tftp_root_directory }}/grubx64.efi"
+      register: stat_grub64
+
+    - name: Check if grubx64.efi was copied and in right mode
+      fail:
+        msg: "stat_grubx64.efi was not copied or in wrong mode"
+      when: stat_grub64.stat.exists == False or stat_grub64.stat.mode != '0555'
+
+    - name: Get stats of ldlinux.c32
+      stat:
+        path: "{{ tftp_root_directory }}/ldlinux.c32"
+      register: stat_ldlinux
+
+    - name: Check if ldlinux.c32 was copied and in right mode
+      fail:
+        msg: "ldlinux.c32 was not copied or in wrong mode"
+      when: stat_ldlinux.stat.exists == False or stat_ldlinux.stat.mode != '0644'
+
+    - name: Get stats of menu.c32
+      stat:
+        path: "{{ tftp_root_directory }}/menu.c32"
+      register: stat_menu
+
+    - name: Check if menu.c32 was copied and in right mode
+      fail:
+        msg: "menu.c32 was not copied or in wrong mode"
+      when: stat_menu.stat.exists == False or stat_menu.stat.mode != '0644'
+
+    - name: Get stats of libmenu.c32
+      stat:
+        path: "{{ tftp_root_directory }}/libmenu.c32"
+      register: stat_libmenu
+
+    - name: Check if libmenu.c32 was copied and in right mode
+      fail:
+        msg: "libmenu.c32 was not copied or in wrong mode"
+      when: stat_libmenu.stat.exists == False or stat_libmenu.stat.mode != '0644'
+
+    - name: Get stats of libutil.c32
+      stat:
+        path: "{{ tftp_root_directory }}/libutil.c32"
+      register: stat_libutil
+
+    - name: Check if libutil.c32 was copied and in right mode
+      fail:
+        msg: "libutil.c32 was not copied or in wrong mode"
+      when: stat_libutil.stat.exists == False and stat_libutil.stat.mode != '0644'
+
+    - name: Get stats of rhcos initramfs
+      stat:
+        path: "{{ tftp_root_directory }}/rhcos-live-initramfs.x86_64.img"
+      register: stat_initramfs
+
+    - name: Check if rhcos initramfs was downloaded and in right mode
+      fail:
+        msg: "rhcos initramfs was not downloaded or in wrong mode"
+      when: stat_initramfs.stat.exists == False or stat_initramfs.stat.mode != '0644'
+
+    - name: Get stats of rhcos kernel
+      stat:
+        path: "{{ tftp_root_directory }}/rhcos-live-kernel-x86_64"
+      register: stat_kernel
+
+    - name: Check if rhcos kernel was downloaded and in right mode
+      fail:
+        msg: "rhcos kernel was not downloaded or in wrong mode"
+      when: stat_kernel.stat.exists == False or stat_kernel.stat.mode != '0644'
+
+    - name: "Get stats of grub.cfg"
+      stat:
+        path: "{{ tftp_root_directory }}/grub.cfg-01-00-11-22-33-44-{{ item }}"
+      with_items:
+        - "01"
+        - "02"
+        - "03"
+        - "04"
+        - "05"
+      register: grub_cfg
+
+    - name: Check if grub.cfg was generated with mode 0644
+      fail:
+        msg: "grub.cfg-01-00-11-22-33-44-{{ item.item }} was not generated or was in wrong mode (current: {{ item.stat.mode }}, expected: 0644"
+      when: item.stat.mode != '0644' or item.stat.exists == False
+      with_items:
+        - "{{ grub_cfg.results }}"
+
+    - name: Get stats of rhcos rootfs
+      stat:
+        path: "{{ nginx_root_directory }}/rhcos-live-rootfs.x86_64.img"
+      register: stat_rootfs
+
+    - name: Check if rhcos rootfs was downloaded and in right mode
+      fail:
+        msg: "rhcos rootfs was not downloaded or in wrong mode"
+      when: stat_rootfs.stat.exists == False or stat_rootfs.stat.mode != '0644'
+
+    - name: Get stats of rhcos metal
+      stat:
+        path: "{{ nginx_root_directory }}/rhcos-metal.x86_64.raw.gz"
+      register: stat_metal
+
+    - name: Check if rhcos metal was downloaded and in right mode
+      fail:
+        msg: "rhcos metal was not downloaded or in wrong mode"
+      when: stat_metal.stat.exists == False or stat_metal.stat.mode != '0644'
 ...

@@ -19,59 +19,66 @@
   tags:
     - tftp
 
-- name: Download RHEL
-  get_url:
-    url: "{{ rhel_download_url }}"
-    dest: /tmp/rhel.iso
-    mode: '0644'
-    checksum: "{{ rhel_download_checksum }}"
+- name: Copy pxelinux.0 to tftp root dir
+  copy:
+    src: "/usr/lib/PXELINUX/pxelinux.0"
+    dest: "{{ tftp_root_directory }}"
+    remote_src: true
+    mode: 0644
   tags:
     - tftp
 
-- name: Extract files for pxe boot
-  iso_extract:
-    image: /tmp/rhel.iso
-    dest: /tmp
-    files:
-      - BaseOS/Packages/syslinux-tftpboot-6.04-4.el8.noarch.rpm
-      # - BaseOS/Packages/shim-ia32-15-16.el8.x86_64.rpm
-      - BaseOS/Packages/shim-x64-15-16.el8.x86_64.rpm
-      # - BaseOS/Packages/grub2-efi-ia32-2.02-90.el8.x86_64.rpm
-      - BaseOS/Packages/grub2-efi-x64-2.02-90.el8.x86_64.rpm
-      - isolinux/ldlinux.c32
-      - isolinux/libutil.c32
-      - EFI/BOOT/grub.cfg
-
-- name: extract rpm files
-  shell: "set -o pipefail && rpm2cpio {{ item }} | cpio -dimv"
-  args:
-    chdir: /tmp
-    executable: /bin/bash
-  changed_when: false
-  with_items:
-    - syslinux-tftpboot-6.04-4.el8.noarch.rpm
-    # - shim-ia32-15-16.el8.x86_64.rpm
-    - shim-x64-15-16.el8.x86_64.rpm
-    # - grub2-efi-ia32-2.02-90.el8.x86_64.rpm
-    - grub2-efi-x64-2.02-90.el8.x86_64.rpm
-
-- name: Copy files to tftp root dir
+- name: Copy BOOTX64.efi to tftp root dir
   copy:
-    src: "/tmp/{{ item }}"
-    dest: "{{ tftp_root_directory }}"
-    owner: "{{ tftp_user }}"
-    group: "{{ tftp_group }}"
-    mode: '644'
+    src: "/usr/lib/shim/shimx64.efi.signed"
+    dest: "{{ tftp_root_directory }}/BOOTX64.efi"
     remote_src: true
-  with_items:
-    - tftpboot/pxelinux.0
-    - tftpboot/menu.c32
-    - tftpboot/libmenu.c32
-    - boot/efi/EFI/BOOT/BOOTX64.EFI
-    - boot/efi/EFI/redhat/grubx64.efi
-    - ldlinux.c32
-    - libutil.c32
-    - grub.cfg
+    mode: 0555
+  tags:
+    - tftp
+
+- name: Copy grubx64.efi to tftp root dir
+  copy:
+    src: "/usr/lib/grub/x86_64-efi-signed/grubnetx64.efi.signed"
+    dest: "{{ tftp_root_directory }}/grubx64.efi"
+    remote_src: true
+    mode: 0555
+  tags:
+    - tftp
+
+- name: Copy ldlinux.c32 to tftp root dir
+  copy:
+    src: "/usr/lib/syslinux/modules/bios/ldlinux.c32"
+    dest: "{{ tftp_root_directory }}"
+    remote_src: true
+    mode: 0644
+  tags:
+    - tftp
+
+- name: Copy menu.c32 to tftp root dir
+  copy:
+    src: "/usr/lib/syslinux/modules/bios/menu.c32"
+    dest: "{{ tftp_root_directory }}"
+    remote_src: true
+    mode: 0644
+  tags:
+    - tftp
+
+- name: Copy libmenu.c32 to tftp root dir
+  copy:
+    src: "/usr/lib/syslinux/modules/bios/libmenu.c32"
+    dest: "{{ tftp_root_directory }}"
+    remote_src: true
+    mode: 0644
+  tags:
+    - tftp
+
+- name: Copy libutil.c32 to tftp root dir
+  copy:
+    src: "/usr/lib/syslinux/modules/bios/libutil.c32"
+    dest: "{{ tftp_root_directory }}"
+    remote_src: true
+    mode: 0644
   tags:
     - tftp
 
@@ -183,7 +190,7 @@
   get_url:
     url: "{{ openshift_mirror_url }}/{{ linuxefi }}"
     dest: "{{ tftp_root_directory }}"
-    mode: '0644'
+    mode: 0644
   tags:
     - tftp
 
@@ -191,7 +198,7 @@
   get_url:
     url: "{{ openshift_mirror_url }}/{{ initrdefi }}"
     dest: "{{ tftp_root_directory }}"
-    mode: '0644'
+    mode: 0644
   tags:
     - tftp
 
