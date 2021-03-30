@@ -9,22 +9,12 @@
   tags:
     - tftp
 
-- name: Ensure pxelinux.cfg directory exists
-  file:
-    path: "{{ tftp_root_directory }}/pxelinux.cfg"
-    state: directory
-    owner: "{{ tftp_user }}"
-    group: "{{ tftp_group }}"
-    mode: "{{ tftp_mode }}"
-  tags:
-    - tftp
-
-- name: Copy pxelinux.0 to tftp root dir
-  copy:
-    src: "/usr/lib/PXELINUX/pxelinux.0"
+- name: Download Initramfs
+  get_url:
+    url: "{{ openshift_mirror_url }}/{{ initrdefi }}"
     dest: "{{ tftp_root_directory }}"
-    remote_src: true
     mode: 0644
+    checksum: "{{ initrdefi_checksum }}"
   tags:
     - tftp
 
@@ -34,42 +24,217 @@
     dest: "/tmp/rhcos.iso"
     mode: 0644
     checksum: "{{ coreos_iso_checksum }}"
+  async: 700
+  poll: 0
+  register: download_rhcos_iso
   tags:
     - tftp
 
-- name: Extract efiboot.img
-  iso_extract:
-    image: /tmp/rhcos.iso
-    dest: /tmp
-    files:
-      - images/efiboot.img
+# Generate files for uefi boot
+- name: Create local folder for grub files
+  file:
+    path: "./grub"
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+  tags:
+    - tftp
+    - efi
 
-- name: Mount efiboot.img
-  shell: "mount efiboot.img /media"
-  args:
-    chdir: /tmp
-    executable: /bin/bash
-  changed_when: false
-  ignore_errors: true
+- name: Generate grub.cfg for master
+  template:
+    src: "grub.cfg.j2"
+    dest: "./grub/grub.cfg-01-{{ item | replace(':', '-') }}"
+    mode: 0644
+  with_items:
+    - "{{ master }}"
+  vars:
+    default: master
+  delegate_to: localhost
+  tags:
+    - tftp
+    - efi
 
-- name: Copy BOOTX64.efi and grubx64.efi to tftp root dir
+- name: Generate grub.cfg for worker
+  template:
+    src: "grub.cfg.j2"
+    dest: "./grub/grub.cfg-01-{{ item | replace(':', '-') }}"
+    mode: 0644
+  with_items:
+    - "{{ worker }}"
+  vars:
+    default: worker
+  delegate_to: localhost
+  tags:
+    - tftp
+    - efi
+
+- name: Generate grub.cfg for bootstrap
+  template:
+    src: "grub.cfg.j2"
+    dest: "./grub/grub.cfg-01-{{ item | replace(':', '-') }}"
+    mode: 0644
+  with_items:
+    - "{{ bootstrap }}"
+  vars:
+    default: bootstrap
+  delegate_to: localhost
+  tags:
+    - tftp
+    - efi
+
+- name: Compress directory ./grub into ./grub.tgz
+  archive:
+    path: ./grub/*
+    dest: ./grub.tgz
+    remove: true
+    mode: 0644
+  delegate_to: localhost
+  tags:
+    - tftp
+    - efi
+
+- name: Copy grub.tgz to remote
   copy:
-    src: "/media/{{ item }}"
+    src: ./grub.tgz
+    dest: "{{ tftp_root_directory }}"
+    mode: 0644
+  tags:
+    - tftp
+    - efi
+
+- name: Delete local grub resources
+  file:
+    path: "./{{ item }}"
+    state: absent
+  with_items:
+    - grub.tgz
+    - grub/
+  delegate_to: localhost
+  tags:
+    - tftp
+    - efi
+
+- name: Unarchive grub.tgz (remote)
+  ansible.builtin.unarchive:
+    src: "{{ tftp_root_directory }}/grub.tgz"
+    dest: "{{ tftp_root_directory }}/"
+    remote_src: true
+  tags:
+    - tftp
+    - efi
+
+# Generate files for bios boot
+- name: Create local folder for pxelinux files
+  file:
+    path: "./pxelinux.cfg"
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+  tags:
+    - tftp
+    - bios
+
+- name: Generate pxelinux.cfg for bootstrap
+  template:
+    src: "pxelinux.cfg.j2"
+    dest: "./pxelinux.cfg/01-{{ item | replace(':', '-') }}"
+    mode: 0644
+  with_items:
+    - "{{ bootstrap }}"
+  vars:
+    default: bootstrap
+  delegate_to: localhost
+  tags:
+    - tftp
+    - bios
+
+- name: Generate pxelinux.cfg for master
+  template:
+    src: "pxelinux.cfg.j2"
+    dest: "./pxelinux.cfg/01-{{ item | replace(':', '-') }}"
+    mode: 0644
+  with_items:
+    - "{{ master }}"
+  vars:
+    default: master
+  delegate_to: localhost
+  tags:
+    - tftp
+    - bios
+
+- name: Generate pxelinux.cfg for worker
+  template:
+    src: "pxelinux.cfg.j2"
+    dest: "./pxelinux.cfg/01-{{ item | replace(':', '-') }}"
+    mode: 0644
+  with_items:
+    - "{{ worker }}"
+  vars:
+    default: worker
+  delegate_to: localhost
+  tags:
+    - tftp
+    - bios
+
+- name: Generate default pxelinux.cfg
+  template:
+    src: "pxelinux.cfg.j2"
+    dest: "./pxelinux.cfg/default"
+    mode: 0644
+  vars:
+    default: default
+  delegate_to: localhost
+  tags:
+    - tftp
+    - bios
+
+- name: Compress directory ./pxelinux.cfg into ./pxelinux.cfg.tgz
+  archive:
+    path: ./pxelinux.cfg
+    dest: ./pxelinux.cfg.tgz
+    remove: true
+    mode: 0644
+  delegate_to: localhost
+  tags:
+    - tftp
+    - bios
+
+- name: Copy pxelinux.cfg.tgz to remote
+  copy:
+    src: ./pxelinux.cfg.tgz
+    dest: "{{ tftp_root_directory }}/"
+    mode: 0644
+  tags:
+    - tftp
+    - bios
+
+- name: Delete local bios resources
+  file:
+    path: "./pxelinux.cfg.tgz"
+    state: absent
+  delegate_to: localhost
+  tags:
+    - tftp
+    - bios
+
+- name: Unarchive pxelinux.cfg.tgz (remote)
+  ansible.builtin.unarchive:
+    src: "{{ tftp_root_directory }}/pxelinux.cfg.tgz"
+    dest: "{{ tftp_root_directory }}/"
+    remote_src: true
+  tags:
+    - tftp
+    - bios
+
+- name: Copy pxelinux.0 to tftp root dir
+  copy:
+    src: "/usr/lib/PXELINUX/pxelinux.0"
     dest: "{{ tftp_root_directory }}"
     remote_src: true
-    mode: 0555
-  with_items:
-    - EFI/redhat/grubx64.efi
-    - EFI/BOOT/BOOTX64.EFI
+    mode: 0644
   tags:
     - tftp
-
-- name: Unmount efiboot.img
-  shell: "umount /media"
-  args:
-    executable: /bin/bash
-  changed_when: false
-  ignore_errors: true
 
 - name: Copy ldlinux.c32 to tftp root dir
   copy:
@@ -115,115 +280,61 @@
   tags:
     - tftp
 
-- name: Generate grub.cfg for master
-  template:
-    src: "grub.cfg.j2"
-    dest: "{{ tftp_root_directory }}/grub.cfg-01-{{ item | replace(':', '-') }}"
-    owner: root
-    group: "root"
-    mode: 0644
-  with_items:
-    - "{{ master }}"
-  vars:
-    fallback: master
-  tags:
-    - tftp
-
-- name: Generate grub.cfg for worker
-  template:
-    src: "grub.cfg.j2"
-    dest: "{{ tftp_root_directory }}/grub.cfg-01-{{ item | replace(':', '-') }}"
-    owner: root
-    group: "root"
-    mode: 0644
-  with_items:
-    - "{{ worker }}"
-  vars:
-    fallback: worker
-  tags:
-    - tftp
-
-- name: Generate grub.cfg for bootstrap
-  template:
-    src: "grub.cfg.j2"
-    dest: "{{ tftp_root_directory }}/grub.cfg-01-{{ item | replace(':', '-') }}"
-    owner: root
-    group: "root"
-    mode: 0644
-  with_items:
-    - "{{ bootstrap }}"
-  vars:
-    fallback: bootstrap
-  tags:
-    - tftp
-
-- name: Generate pxelinux.cfg for bootstrap
-  template:
-    src: "pxelinux.cfg.j2"
-    dest: "{{ tftp_root_directory }}/pxelinux.cfg/01-{{ item | replace(':', '-') }}"
-    owner: root
-    group: "root"
-    mode: 0644
-  with_items:
-    - "{{ bootstrap }}"
-  vars:
-    default: bootstrap
-  tags:
-    - tftp
-
-- name: Generate pxelinux.cfg for master
-  template:
-    src: "pxelinux.cfg.j2"
-    dest: "{{ tftp_root_directory }}/pxelinux.cfg/01-{{ item | replace(':', '-') }}"
-    owner: root
-    group: "root"
-    mode: 0644
-  with_items:
-    - "{{ master }}"
-  vars:
-    default: master
-  tags:
-    - tftp
-
-- name: Generate pxelinux.cfg for worker
-  template:
-    src: "pxelinux.cfg.j2"
-    dest: "{{ tftp_root_directory }}/pxelinux.cfg/01-{{ item | replace(':', '-') }}"
-    owner: root
-    group: "root"
-    mode: 0644
-  with_items:
-    - "{{ worker }}"
-  vars:
-    default: worker
-  tags:
-    - tftp
-
-- name: Generate default pxelinux.cfg
-  template:
-    src: "pxelinux.cfg.j2"
-    dest: "{{ tftp_root_directory }}/pxelinux.cfg/default"
-    owner: root
-    group: "root"
-    mode: 0644
-  vars:
-    default: default
-  tags:
-    - tftp
-
 - name: Download Kernel
   get_url:
     url: "{{ openshift_mirror_url }}/{{ linuxefi }}"
     dest: "{{ tftp_root_directory }}"
     mode: 0644
+    checksum: "{{ linuxefi_checksum }}"
   tags:
     - tftp
 
-- name: Download Initramfs
-  get_url:
-    url: "{{ openshift_mirror_url }}/{{ initrdefi }}"
+# synchronize
+- name: check state of rhcos iso download
+  async_status:
+    jid: "{{ download_rhcos_iso.ansible_job_id }}"
+  register: res_rhcos
+  until: res_rhcos.finished
+  retries: 100
+  delay: 10
+  tags:
+    - tftp
+
+- name: Extract efiboot.img
+  iso_extract:
+    image: /tmp/rhcos.iso
+    dest: /tmp
+    files:
+      - images/efiboot.img
+  tags:
+    - tftp
+
+- name: Mount efiboot.img
+  mount:
+    path: /media
+    src: /tmp/efiboot.img
+    opts: loop
+    fstype: msdos
+    state: mounted
+  tags:
+    - tftp
+
+- name: Copy BOOTX64.efi and grubx64.efi to tftp root dir
+  copy:
+    src: "/media/{{ item }}"
     dest: "{{ tftp_root_directory }}"
-    mode: 0644
+    remote_src: true
+    mode: 0555
+  with_items:
+    - efi/redhat/grubx64.efi
+    - efi/BOOT/BOOTX64.EFI
+  tags:
+    - tftp
+
+- name: Unmount efiboot.img
+  mount:
+    path: /media
+    state: unmounted
   tags:
     - tftp
 

@@ -6,7 +6,7 @@
     - "{{ ansible_distribution }}.yml"
     - "{{ ansible_os_family }}.yml"
   tags:
-    - pxe
+    - tftp
     - nginx
 
 - name: Update cache
@@ -14,7 +14,7 @@
     update_cache: true
     cache_valid_time: 3600
   tags:
-    - pxe
+    - tftp
     - nginx
 
 - name: Apt install packages
@@ -30,15 +30,36 @@
     state: present
     update_cache: true
   tags:
-    - pxe
+    - tftp
     - nginx
-
-- name: Configure TFTP-Server for PXE boot
-  include_tasks: configure_tftp.yml
 
 - name: Configure NGINX-Server for PXE boot
   include_tasks: configure_nginx.yml
   tags:
     - nginx
 
+- name: Configure TFTP-Server for PXE boot
+  include_tasks: configure_tftp.yml
+  tags:
+    - tftp
+
+- name: wait for rootfs download
+  async_status:
+    jid: "{{ download_rootfs_nginx.ansible_job_id }}"
+  register: res_rootfs
+  until: res_rootfs.finished
+  retries: 100
+  delay: 10
+  tags:
+    - nginx
+
+- name: wait for coroes iamge download
+  async_status:
+    jid: "{{ download_coreos_image_nginx.ansible_job_id }}"
+  register: res_image
+  until: res_image.finished
+  retries: 100
+  delay: 10
+  tags:
+    - nginx
 ...

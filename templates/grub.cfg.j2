@@ -1,5 +1,5 @@
-default={% if fallback in ['worker', 'master', 'bootstrap'] %}
-"{{fallback}}"
+default={% if default in ['worker', 'master', 'bootstrap'] %}
+"{{default}}"
 {% else %}
 "worker"
 {% endif %}

@@ -4,6 +4,7 @@
   file:
     path: "{{ nginx_pxe_directory }}"
     state: directory
+    mode: 0755
   tags: nginx
 
 - name: Download rootfs into nginx dir
@@ -11,13 +12,22 @@
     url: "{{ openshift_mirror_url }}/{{ coreos_root_fs }}"
     dest: "{{ nginx_pxe_directory }}"
     mode: '0644'
-  tags: nginx
+    checksum: "{{ rootfs_checksum }}"
+  async: 700
+  poll: 0
+  register: download_rootfs_nginx
+  tags:
+    - nginx
 
 - name: Download coreos image into nginx dir
   get_url:
     url: "{{ openshift_mirror_url }}/{{ coreos_image }}"
     dest: "{{ nginx_pxe_directory }}"
     mode: '0644'
+    checksum: "{{ image_checksum }}"
+  async: 700
+  poll: 0
+  register: download_coreos_image_nginx
   tags: nginx
 
 ...
