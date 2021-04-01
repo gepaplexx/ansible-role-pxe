@@ -31,11 +31,11 @@
     - tftp
 
 # Generate files for uefi boot
-- name: Create local folder for grub files
-  file:
-    path: "./grub"
+- name: Create temporary folder for grub files
+  ansible.builtin.tempfile:
     state: directory
-    mode: '0755'
+    suffix: grub
+  register: grubfolder
   delegate_to: localhost
   tags:
     - tftp
@@ -44,7 +44,7 @@
 - name: Generate grub.cfg for master
   template:
     src: "grub.cfg.j2"
-    dest: "./grub/grub.cfg-01-{{ item | replace(':', '-') }}"
+    dest: "{{ grubfolder.path }}/grub.cfg-01-{{ item | replace(':', '-') }}"
     mode: 0644
   with_items:
     - "{{ master }}"
@@ -58,7 +58,7 @@
 - name: Generate grub.cfg for worker
   template:
     src: "grub.cfg.j2"
-    dest: "./grub/grub.cfg-01-{{ item | replace(':', '-') }}"
+    dest: "{{ grubfolder.path }}/grub.cfg-01-{{ item | replace(':', '-') }}"
     mode: 0644
   with_items:
     - "{{ worker }}"
@@ -72,7 +72,7 @@
 - name: Generate grub.cfg for bootstrap
   template:
     src: "grub.cfg.j2"
-    dest: "./grub/grub.cfg-01-{{ item | replace(':', '-') }}"
+    dest: "{{ grubfolder.path }}/grub.cfg-01-{{ item | replace(':', '-') }}"
     mode: 0644
   with_items:
     - "{{ bootstrap }}"
@@ -85,8 +85,8 @@
 
 - name: Compress directory ./grub into ./grub.tgz
   archive:
-    path: ./grub/*
-    dest: ./grub.tgz
+    path: "{{ grubfolder.path }}/*"
+    dest: "{{ grubfolder.path }}/grub.tgz"
     remove: true
     mode: 0644
   delegate_to: localhost
@@ -96,20 +96,17 @@
 
 - name: Copy grub.tgz to remote
   copy:
-    src: ./grub.tgz
+    src: "{{ grubfolder.path }}/grub.tgz"
     dest: "{{ tftp_root_directory }}"
     mode: 0644
   tags:
     - tftp
     - efi
 
-- name: Delete local grub resources
+- name: Delete temp grub folder
   file:
-    path: "./{{ item }}"
+    path: "{{ grubfolder.path }}"
     state: absent
-  with_items:
-    - grub.tgz
-    - grub/
   delegate_to: localhost
   tags:
     - tftp
@@ -125,9 +122,19 @@
     - efi
 
 # Generate files for bios boot
-- name: Create local folder for pxelinux files
+- name: Create temporary folder for pxelinux files
+  ansible.builtin.tempfile:
+    state: directory
+    suffix: pxelinux.cfg
+  register: pxefolder
+  delegate_to: localhost
+  tags:
+    - tftp
+    - bios
+
+- name: Create pxelinux.cfg folder in temp pxe folder
   file:
-    path: "./pxelinux.cfg"
+    path: "{{ pxefolder.path }}/pxelinux.cfg"
     state: directory
     mode: '0755'
   delegate_to: localhost
@@ -138,7 +145,7 @@
 - name: Generate pxelinux.cfg for bootstrap
   template:
     src: "pxelinux.cfg.j2"
-    dest: "./pxelinux.cfg/01-{{ item | replace(':', '-') }}"
+    dest: "{{ pxefolder.path }}/pxelinux.cfg/01-{{ item | replace(':', '-') }}"
     mode: 0644
   with_items:
     - "{{ bootstrap }}"
@@ -152,7 +159,7 @@
 - name: Generate pxelinux.cfg for master
   template:
     src: "pxelinux.cfg.j2"
-    dest: "./pxelinux.cfg/01-{{ item | replace(':', '-') }}"
+    dest: "{{ pxefolder.path }}/pxelinux.cfg/01-{{ item | replace(':', '-') }}"
     mode: 0644
   with_items:
     - "{{ master }}"
@@ -166,7 +173,7 @@
 - name: Generate pxelinux.cfg for worker
   template:
     src: "pxelinux.cfg.j2"
-    dest: "./pxelinux.cfg/01-{{ item | replace(':', '-') }}"
+    dest: "{{ pxefolder.path }}/pxelinux.cfg/01-{{ item | replace(':', '-') }}"
     mode: 0644
   with_items:
     - "{{ worker }}"
@@ -180,7 +187,7 @@
 - name: Generate default pxelinux.cfg
   template:
     src: "pxelinux.cfg.j2"
-    dest: "./pxelinux.cfg/default"
+    dest: "{{ pxefolder.path }}/pxelinux.cfg/default"
     mode: 0644
   vars:
     default: default
@@ -191,8 +198,8 @@
 
 - name: Compress directory ./pxelinux.cfg into ./pxelinux.cfg.tgz
   archive:
-    path: ./pxelinux.cfg
-    dest: ./pxelinux.cfg.tgz
+    path: "{{ pxefolder.path }}/pxelinux.cfg"
+    dest: "{{ pxefolder.path }}/pxelinux.cfg.tgz"
     remove: true
     mode: 0644
   delegate_to: localhost
@@ -202,7 +209,7 @@
 
 - name: Copy pxelinux.cfg.tgz to remote
   copy:
-    src: ./pxelinux.cfg.tgz
+    src: "{{ pxefolder.path }}/pxelinux.cfg.tgz"
     dest: "{{ tftp_root_directory }}/"
     mode: 0644
   tags:
@@ -211,7 +218,7 @@
 
 - name: Delete local bios resources
   file:
-    path: "./pxelinux.cfg.tgz"
+    path: "{{ pxefolder.path }}"
     state: absent
   delegate_to: localhost
   tags:
